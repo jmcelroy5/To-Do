@@ -2,11 +2,11 @@ var List = {
 	items: [],
 	numLeft: 0,
 	numCompleted: 0,
-	addItem: function(text){
+	addItem: function(text, complete){
 		var toDo = {
 			id: this.getNextNum(),
 			text: text,
-			complete: false
+			complete: complete || false
 		};
 		createItemView(toDo);
 		this.items.push(toDo);
@@ -24,7 +24,7 @@ var List = {
 		this.updateCounters();
 	},
 	getItemIdx: function(id){
-		for (var i=0; i < this.items.length; i++){
+		for (var i = 0; i < this.items.length; i++){
 			if (this.items[i].id == id) {
 				return i;
 			}
@@ -46,6 +46,7 @@ var List = {
 				this.items.splice(i,1);
 			}
 		}
+		this.updateCounters();
 	},
 	updateCounters: function(){
 		this.numLeft = this.getRemaining().length;
@@ -107,7 +108,7 @@ var addItemHandler = function(){
 	var text = $("#input-field").val();
 	if (text){
 		$("#input-field").val('');
-		List.addItem(text);
+		List.addItem({text: text, complete: false});
 	}
 };
 
@@ -157,6 +158,18 @@ $(document).ready(function(){
 	});
 });
 
-// drag and drop to reorder
-// use local storage to persist
+$(document).ready(function(){
+	var items = JSON.parse(localStorage.items);
+	if (items){
+		for (var i = 0; i < items.length; i++){
+			List.addItem(items[i]);
+		}
+	}
+});
 
+// store to-dos in localStorage when user navigates away
+$(window).on('beforeunload', function(){
+	localStorage.items = JSON.stringify(List.items);
+});
+
+// TODO: drag and drop to reorder
