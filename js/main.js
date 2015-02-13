@@ -2,12 +2,8 @@ var List = {
 	items: [],
 	numLeft: 0,
 	numCompleted: 0,
-	addItem: function(text, complete){
-		var toDo = {
-			id: this.getNextNum(),
-			text: text,
-			complete: complete || false
-		};
+	addItem: function(toDo){
+		toDo.id = toDo.id || this.getNextNum();
 		createItemView(toDo);
 		this.items.push(toDo);
 		this.updateCounters();
