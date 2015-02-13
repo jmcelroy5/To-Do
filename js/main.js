@@ -3,7 +3,7 @@ var List = {
 	numLeft: 0,
 	numCompleted: 0,
 	addItem: function(toDo){
-		toDo.id = toDo.id || this.getNextNum();
+		toDo.id = this.getNextNum();
 		createItemView(toDo);
 		this.items.push(toDo);
 		this.updateCounters();
@@ -62,11 +62,14 @@ var List = {
 		};
 }).apply(List);
 
+// View functions
+
 var createItemView = function(item){
 
 	var itemView = $('<div></div>', {
 		'class': 'todo',
-		text: item.text
+		text: item.text,
+		id: item.id
 	});
 
 	var checkBox = $('<div></div>', {
@@ -100,6 +103,15 @@ var createItemView = function(item){
 	$('#items').append(itemView);
 };
 
+var renderList = function(items){
+	$("#items").empty();
+	for (var i=0; i < items.length; i++){
+		createItemView(items[i]);
+	}
+};
+
+//  Event handlers
+
 var addItemHandler = function(){
 	var text = $("#input-field").val();
 	if (text){
@@ -122,15 +134,19 @@ var filterListHandler = function(view){
 	}
 };
 
-var renderList = function(items){
-	$("#items").empty();
-	for (var i=0; i < items.length; i++){
-		createItemView(items[i]);
-	}
-};
-
 $(document).ready(function(){
-	// event listeners for adding new item
+	// get to-dos from local storage
+	var items = JSON.parse(localStorage.items);
+	if (items){
+		for (var i = 0; i < items.length; i++){
+			List.addItem(items[i]);
+		}
+	}
+
+	// Drag and drop to sort
+	$("#items").sortable();
+
+	// event listeners for adding an item
 	$("#add-button").click(addItemHandler);
 	$("#input-field").keypress(function(e){
 		if (e.which == 13){
@@ -138,7 +154,7 @@ $(document).ready(function(){
 		}
 	});
 
-	// event listener on filters
+	// event listener on filter menu
 	$("#filter").on("click", "li", function(e){
 		var $selected = $(this);
 		var filter = $(this).attr("id");
@@ -147,25 +163,24 @@ $(document).ready(function(){
 		filterListHandler(filter);
 	});
 
-	// event listener on 'clear' btn
+	// event listener on clear button
 	$("#clear").on("click", function(e){
 		List.clearCompleted();
 		renderList(List.items);
 	});
 });
 
-$(document).ready(function(){
-	var items = JSON.parse(localStorage.items);
-	if (items){
-		for (var i = 0; i < items.length; i++){
-			List.addItem(items[i]);
-		}
-	}
-});
-
-// store to-dos in localStorage when user navigates away
+// when user closes the window, order items 
+// according to UI then store in localStorage 
 $(window).on('beforeunload', function(){
-	localStorage.items = JSON.stringify(List.items);
+	var ids = [];
+	$.each($(".todo"), function(index,value){
+		ids.push(value.id);
+	});
+	var items = ids.map(function(id){
+		id = parseInt(id, 10);
+		var idx = List.getItemIdx(id);
+		return List.items[idx];
+	});
+	localStorage.items = JSON.stringify(items);
 });
-
-// TODO: drag and drop to reorder
